@@ -1,0 +1,699 @@
+---
+title: "Table-病人基本資料"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+date: "2024-05-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)
+library(dplyr) 
+```
+
+```{R function, echo=FALSE, warning=F}
+# function
+# 百分比函數
+percent_fn <- function(x,y){return(round(x / y * 100,1))} 
+
+data_arrange_na <- function(data_sum,y){
+  if ("NA's" %in% names(data_sum)) {
+    c(data_sum[names(data_sum)!= "NA's"][(length(data_sum)-1):1],data_sum[names(data_sum)== "NA's"])
+    } else {
+    c(sort(data_sum)[length(data_sum):1], "NA's"=0)}}
+
+```
+
+```{R, include=FALSE, warning=F}
+# 資料載入
+DNR_Em_Death_Cancer_Diag <- readRDS("C:/Users/Huang/Desktop/第三年計畫/R_Exercise/Emergency Programs/Research_data/RDS檔/DNR_Em_Death_Cancer_Diag.RDS")
+need_data <- subset(DNR_Em_Death_Cancer_Diag,em_after_dnr==1 & !is.na(DIAGNOSISCODE))
+total_persons <- n_distinct(need_data$PERSONID2)
+```
+
+# 基本資料
+共有6391人  
+
+## 年齡
+dnr_age:判末+簽署dnr時年齡  
+dnr_age_group:將dnr_age分組  
+  Under 75-75歲以下 75-84-75-84歲 Over 85-85歲以上 <br>
+```{R age, echo=FALSE, warning=F}
+# dnr_age
+dnr_age_group_sum <- summary(as.factor(need_data$dnr_age_group))
+dnr_age_group_percent <- percent_fn(dnr_age_group_sum,total_persons)
+
+summary(need_data[,c("dnr_age","dnr_age_group")])
+# dnr_age的標準差
+cat("Mean(SD)=",round(mean(need_data$dnr_age),2),"(",round(sd(need_data$dnr_age),2),")\n", sep = "")
+cat("75歲以下有",dnr_age_group_sum[1],"人，75-84歲有",dnr_age_group_sum[2],"人，85歲以上有",dnr_age_group_sum[3],"人，共有",sum(dnr_age_group_sum),"人。\n")
+```
+
+## 性別
+ADMINISTRATIVESEXCODE 性別:  
+F-女性 M-男性 <br>
+```{R Sex, echo=FALSE, warning=F}
+# Sex
+ADMINISTRATIVESEXCODE_sum <- summary(as.factor(need_data$ADMINISTRATIVESEXCODE))
+ADMINISTRATIVESEXCODE_percent <- percent_fn(ADMINISTRATIVESEXCODE_sum,total_persons)
+
+ADMINISTRATIVESEXCODE_sum
+cat("Male有",summary(as.factor(need_data[,"ADMINISTRATIVESEXCODE"]))[2],"人，Female有",summary(as.factor(need_data[,"ADMINISTRATIVESEXCODE"]))[1],"人，共有",n_distinct(need_data$PERSONID2),"人。\n")
+```
+## 教育程度
+教育程度 <br>
+
+<style>
+  .PHYEXAMCODE td {
+    padding-right: 20px; /* 设置右边距 */
+  }
+</style>
+
+<table class="PHYEXAMCODE">
+  <tr>
+    <td>Unclear/Cannot answer-不清楚/不便回答</td> <td>Unclear-不清楚</td> <td>Elementary school-小學</td> <td>Illiterate-不識字</td>
+  </tr>
+  <tr>
+    <td>Literate-識字</td> <td>High school-高中</td> <td>Junior high school-國中</td> <td>University-大學</td>
+  </tr>
+  <tr>
+    <td>Junior College-專科</td> <td>Master's degree -碩士</td> <td>Not enrolled-未入學</td> <td>Doctorate-博士</td>
+  </tr>
+  <tr>
+   <td>High school & NBSP-高中 & NBSP</td> <td></td> <td>Illiterate & NBSP-不識字 & NBSP</td>
+  </tr>
+</table>
+```{R Educational, echo=FALSE, warning=F}
+# Educational
+Educational_sum <- sort(summary(as.factor(need_data$Educational)))
+Educational_arrange <- data_arrange_na(Educational_sum)
+Educational_arrange_percent <- percent_fn(Educational_arrange,total_persons)
+Educational_NameEnglis <-c("Unclear/Cannot answer","Unclear",
+                        "Elementary school","Illiterate", "Literate",
+                        "High school", "Junior high school","University",
+                        "Junior College", "Master's degree", "Not enrolled",
+                        "Kindergarten", "Doctorate", "NA's")
+Educational_arrange
+cat("不清楚/不便回答 有",Educational_sum[14],"人，不清楚 有",Educational_sum[12],"小學 有",Educational_sum[11],"人，不識字 有",Educational_sum[10],"識字 有",Educational_sum[9],"人，高中 有",Educational_sum[8],"人，國中 有",Educational_sum[7],"人，大學 有",Educational_sum[6],"人，專科 有",Educational_sum[5],"人，碩士 有",Educational_sum[4],"人，未入學 有",Educational_sum[3],"人，幼兒園 有",Educational_sum[2],"人，博士 有",Educational_sum[1],"人。\n")
+cat("共有",total_persons,"人，NA有",Educational_sum[13],"人，能使用的資料有",sum(Educational_sum[-13]),"人。\n")
+```
+
+## 婚姻狀況
+MARITALSTATUSCODE 婚姻狀況:  
+A-分居 B-未婚 D-離婚 G-同居 M-已婚 W-鰥寡 <br>
+```{R MARITALSTATUSCODE, echo=FALSE, warning=F}
+need_data$MARITALSTATUSCODE <- na_if(need_data$MARITALSTATUSCODE, "")
+# MARITALSTATUSCODE
+MARITAL_sum <- sort(summary(as.factor(need_data$MARITALSTATUSCODE)))
+MARITAL_arrange <- data_arrange_na(MARITAL_sum)
+MARITAL_arrange_percent <- percent_fn(MARITAL_arrange,total_persons)
+
+MARITAL_arrange
+cat("M-已婚有",MARITAL_sum[6],"人，B-未婚有",MARITAL_sum[5],"W-鰥寡有",MARITAL_sum[4],"人，D-離婚有",MARITAL_sum[3],"G-同居有",MARITAL_sum[2],"人，A-分居有",MARITAL_sum[1],"人。\n")
+cat("共有",total_persons,"人，NA有",MARITAL_sum[7],"人，能使用的資料有",sum(MARITAL_sum[-7]),"人。\n")
+```
+## 宗教
+宗教信仰<br>
+
+<style>
+  .PHYEXAMCODE td {
+    padding-right: 20px; /* 设置右边距 */
+  }
+</style>
+
+<table class="PHYEXAMCODE">
+  <tr>
+    <td>None-無</td> <td>Buddhism-佛教</td> <td>Taoism-道教</td> <td>Folk religion-民間信仰</td>
+  </tr>
+  <tr>
+    <td>Christianity-基督教</td> <td>Unclear/Cannot answer-不清楚/不便回答</td> <td>Unclear-不清楚</td> <td>Catholic-天主教</td>
+  </tr>
+  <tr>
+     <td>Yiguandao-一貫道</td> 
+  </tr>
+</table>   
+<br>
+```{R Religious, echo=FALSE, warning=F}
+need_data$Religious <- na_if(need_data$Religious, "")
+# Religious
+Religious_sum <- sort(summary(as.factor(need_data$Religious)))
+Religious_arrange <- data_arrange_na(Religious_sum)
+Religious_arrange_percent <- percent_fn(Religious_arrange,total_persons)
+Religious_NameEnglis <- c("None","Buddhism","Taoism","Folk religion","Christianity",
+                            "Unclear/Cannot answer","Unclear","Catholic","Yiguandao","NA's")
+Religious_arrange
+cat("無 有",Religious_sum[10],"人，佛教 有",Religious_sum[8],"道教 有",Religious_sum[7],"人，民間信仰 有",Religious_sum[6],"基督教 有",Religious_sum[5],"人，不清楚/不便回答 有",Religious_sum[4],"人，不清楚 有",Religious_sum[3],"人，天主教 有",Religious_sum[2],"人，一貫道 有",Religious_sum[1],"人。\n")
+cat("共有",total_persons,"人，NA有",Religious_sum[9],"人，能使用的資料有",sum(Religious_sum[-9]),"人。\n")
+```
+
+## 職業別
+JOBKINDCODE 職業別: 
+<style>
+  .jobtable td {
+    padding-right: 20px; /* 设置右边距 */
+  }
+</style>
+
+<table class="jobtable">
+  <tr>
+    <td>01-軍人</td> <td>02-公務員</td> <td>03-教育</td> <td>04-農</td>
+  </tr>
+  <tr>
+    <td>05-林</td> <td>06-魚</td> <td>07-牧</td> <td>08-商</td>
+  </tr>
+  <tr>
+    <td>09-工</td> <td>10-礦</td> <td>11-學生</td> <td>12-自由業</td>
+  </tr>
+  <tr>
+    <td>13-家管</td> <td>14-無</td> <td>15-服務業</td> <td>16-其他</td>
+  </tr>
+</table>  
+
+AB - Labor(4~7、9、10合併)  
+PE - Public Employees (1~3合併)  
+SO - 自由業、其他(11、16合併)  
+```{R JOB_NEW, echo=FALSE, warning=F}
+# JOB_NEW
+JOBnew_sum <- sort(summary(as.factor(need_data$JOB_NEW)))
+JOBnew_arrange <- data_arrange_na(JOBnew_sum)
+JOBnew_arrange_percent <- percent_fn(JOBnew_arrange,total_persons)
+
+JOBnew_arrange
+cat("14-無有",JOBnew_sum[8],"人，SO - 自由業、其他有",JOBnew_sum[7],"人，08-商有",JOBnew_sum[6],"人，13-家管有",JOBnew_sum[5],"人，AB - Labor有",JOBnew_sum[4],"人，PE - Public Employees有",JOBnew_sum[3],"人，12-自由業有",JOBnew_sum[2],"人，15-服務業有",JOBnew_sum[1],"人。\n")
+cat("共有",total_persons,"人，NA有",JOBnew_sum[9],"人，能使用的資料有",sum(JOBnew_sum[-9]),"人。\n")
+```
+
+
+## 聯絡地址郵遞區號分組
+region_group 聯絡地址郵遞區號  
+PPK-臺北市、新北市、基隆市  
+TCM-桃園市、新竹市、新竹縣、苗栗縣  
+YCN-雲林縣、嘉義市、嘉義縣、臺南市  
+other-其餘縣市
+```{R region_group, echo=FALSE, warning=F}
+# 將郵遞區號合併並轉換為縣市名稱
+region_group_sum <- sort(summary(as.factor(need_data$region_group)))
+region_group_arrange <- data_arrange_na(region_group_sum)
+region_group_arrange_percent <- percent_fn(region_group_arrange,total_persons)
+
+#region_group_arrange
+cat("TCM-桃園市、新竹市、新竹縣、苗栗縣 有",region_group_arrange[1],"人\nYCN-雲林縣、嘉義市、嘉義縣、臺南市  有",region_group_arrange[2],"人\nPPK-臺北市、新北市、基隆市 有",region_group_arrange[3],"人\nother-其餘縣市 有",region_group_arrange[4],"人\n")
+cat("共有",total_persons,"人，NA有",region_group_arrange[5],"人，能使用的資料有",sum(region_group_arrange[-5]),"人。\n")
+```
+
+```{R CONTACTZIPAREACODE, echo=FALSE, warning=F}
+## 聯絡地址郵遞區號
+#CONTACTZIPAREACODE 聯絡地址郵遞區號  
+#PPK-臺北市、新北市、基隆市  
+#TCM-桃園市、新竹市、新竹縣、苗栗縣  
+#CCT-臺中市、彰化縣、南投縣  
+#YCN-雲林縣、嘉義市、嘉義縣、臺南市  
+#KPP-高雄市、屏東縣  
+#YHT-宜蘭縣、花蓮縣、臺東縣  
+#KPL-金門縣、澎湖縣、連江縣  
+# 將郵遞區號合併並轉換為縣市名稱
+#region_sum <- sort(summary(need_data$region))
+#region_arrange <- data_arrange_na(region_sum)
+#region_arrange_percent <- percent_fn(region_arrange,total_persons)
+#
+#region_arrange
+#cat("TCM-桃園市、新竹市、新竹縣、苗栗縣 有",region_sum[8],"人，YCN-雲林縣、嘉義市、嘉義縣、臺南市  #有",region_sum[7],"人，PPK-臺北市、新北市、基隆市 有",region_sum[6],"人，CCT-臺中市、彰化縣、南投縣 #有",region_sum[5],"人，KPP-高雄市、屏東縣 有",region_sum[3],"人，YHT-宜蘭縣、花蓮縣、臺東縣 #有",region_sum[2],"人，KPL-金門縣、澎湖縣、連江縣 有",region_sum[1],"人。\n")
+#cat("共有",total_persons,"人，NA有",region_sum[4],"人，能使用的資料有",sum(region_sum[-4]),"人。\n")
+```
+
+# 功能狀態分組
+巴氏量表    
+完全依賴　0 ～20分  
+嚴重依賴　21～60分  
+中度依賴　61～90分  
+輕度依賴　91～99分  
+完全獨立  100分  
+```{R Barthel_group, echo=FALSE, warning=F}
+# 巴氏量表
+Barthel_group_arrange <- summary(as.factor(need_data$Barthel_group))
+Barthel_group_arrange_percent <- percent_fn(Barthel_group_arrange,total_persons)
+
+Barthel_group_arrange
+
+for (i in 1:(length(Barthel_group_arrange)-1)) {
+  cat("巴氏量表",names(Barthel_group_arrange[i]),"有",Barthel_group_arrange[i],"人，百分比為",
+      Barthel_group_arrange_percent[i],"。\n")
+}
+
+cat("共有",total_persons,"人，NA有",Barthel_group_arrange[length(Barthel_group_arrange)],"人，能使用的資料有",sum(Barthel_group_arrange[-length(Barthel_group_arrange)]),"人。\n")
+```
+
+```{R Barthel, echo=FALSE, warning=F}
+# 巴氏量表
+#Barthel_sum <- sort(summary(as.factor(need_data$Barthel)))
+#Barthel_arrange <- data_arrange_na(Barthel_sum)
+#Barthel_arrange_percent <- percent_fn(Barthel_arrange,total_persons)
+#
+#Barthel_arrange
+#
+#for (i in 1:21) {
+#  cat("巴氏量表",names(Barthel_arrange[i]),"分 有",Barthel_arrange[i],"人，百分比為",
+#      Barthel_arrange_percent[i],"。\n")
+#}
+#
+#cat("共有",total_persons,"人，NA有",Barthel_arrange[length(Barthel_arrange)],"人，能使用的資料有",sum(Barthel_#arrange[-length(Barthel_arrange)]),"人。\n")
+```
+
+# 意識狀態(最接近need_time的資料)
+GCSE:昏迷指數-睜眼，範圍：1-4、C-眼皮太腫而無法張開眼睛。（意識清楚時，預設E,V,M = 0,0,0）    
+GCSV:昏迷指數-言語，範圍：1-5、A-失語症、E-氣管插管而無法正常發聲、T-氣管切開而無法正常發聲。  
+GCSM:昏迷指數-動作，範圍：1-6。  
+GCS: GCSE + GCSV + GCSM 加總(C、A、E、T視為1)，範圍：0-15。  
+```{R GCS_all, echo=FALSE, warning=F}
+# 意識狀態
+# 最接近need_time的昏迷指數-加總
+GCS_near_dnr_sum <- summary(as.factor(need_data$GCS_near_dnr))
+GCS_near_dnr_arrange <- c(GCS_near_dnr_sum[names(GCS_near_dnr_sum)!=0],GCS_near_dnr_sum["0"])
+GCS_near_dnr_arrange["NA's"] <- 0
+GCS_near_dnr_arrange_percent <- percent_fn(GCS_near_dnr_arrange,total_persons)
+
+cat("最接近need_time的昏迷指數-加總:\n")
+for (i in 1:(length(GCS_near_dnr_arrange)-1)) {
+  cat("\r",names(GCS_near_dnr_arrange[i]),"分 有",GCS_near_dnr_arrange[i],"人，百分比為",
+      GCS_near_dnr_arrange_percent[i],"。\n")
+}
+
+cat("共有",total_persons,"人，NA有",GCS_near_dnr_arrange[length(GCS_near_dnr_arrange)],"人，能使用的資料有",sum(GCS_near_dnr_arrange[-length(GCS_near_dnr_arrange)]),"人。\n")
+```
+
+```{R GCS, echo=FALSE, warning=F}
+## 意識狀態
+## 最接近need_time的昏迷指數-睜眼
+#GCSE_near_dnr_sum <- sort(summary(as.factor(need_data$GCSE_near_dnr)))
+#GCSE_near_dnr_arrange <- data_arrange_na(GCSE_near_dnr_sum)
+#GCSE_near_dnr_arrange_percent <- percent_fn(GCSE_near_dnr_arrange,total_persons)
+#
+## 最接近need_time的昏迷指數-言語
+#GCSV_near_dnr_sum <- sort(summary(as.factor(need_data$GCSV_near_dnr)))
+#GCSV_near_dnr_arrange <- data_arrange_na(GCSV_near_dnr_sum)
+#GCSV_near_dnr_arrange_percent <- percent_fn(GCSV_near_dnr_arrange,total_persons)
+#
+## 最接近need_time的昏迷指數-動作
+#GCSM_near_dnr_sum <- sort(summary(as.factor(need_data$GCSM_near_dnr)))
+#GCSM_near_dnr_arrange <- data_arrange_na(GCSM_near_dnr_sum)
+#GCSM_near_dnr_arrange_percent <- percent_fn(GCSM_near_dnr_arrange,total_persons)
+#
+##GCSE_near_dnr_arrange
+##GCSV_near_dnr_arrange
+##GCSM_near_dnr_arrange
+#cat("最接近need_time的昏迷指數-睜眼:\n")
+#for (i in 1:(length(GCSE_near_dnr_arrange)-1)) {
+#  cat("\r",names(GCSE_near_dnr_arrange[i]),"分 有",GCSE_near_dnr_arrange[i],"人，百分比為",
+#      GCSE_near_dnr_arrange_percent[i],"。\n")
+#}
+#
+#cat("最接近need_time的昏迷指數-言語:\n")
+#for (i in 1:(length(GCSV_near_dnr_arrange)-1)) {
+#  cat("\r",names(GCSV_near_dnr_arrange[i]),"分 有",GCSV_near_dnr_arrange[i],"人，百分比為",
+#      GCSV_near_dnr_arrange_percent[i],"。\n")
+#}
+#
+#cat("最接近need_time的昏迷指數-動作:\n")
+#for (i in 1:(length(GCSM_near_dnr_arrange)-1)) {
+#  cat("\r",names(GCSM_near_dnr_arrange[i]),"分 有",GCSM_near_dnr_arrange[i],"人，百分比為",
+#      GCSM_near_dnr_arrange_percent[i],"。\n")
+#}
+#
+#cat("共有",total_persons,"人，NA有",GCSE_near_dnr_arrange[length(GCSE_near_dnr_arrange)],"人，能使用的資料有",#sum(GCSE_near_dnr_arrange[-length(GCSE_near_dnr_arrange)]),"人。\n")
+```
+
+# 導管留置記錄(鼻胃管、尿管、氣切管、胃造廔)
+Nasogastric_tube:在判末+簽署前一年內進行過鼻胃管(1=是;0=否)   
+Urinary_catheter:在判末+簽署前一年內進行過尿管(1=是;0=否)  
+Tracheostomy_tube:在判末+簽署前一年內進行過氣切(1=是;0=否)  
+Gastrostomy:在判末+簽署前一年內進行過胃造廔(1=是;0=否)  
+```{R tube, echo=FALSE, warning=F}
+# 判末+簽署前的導管留置記錄(鼻胃管、尿管、氣切管、胃造廔)
+# 鼻胃管
+befor_dnr_Nasogastric_tube_sum <- sort(summary(as.factor(need_data$befor_dnr_Nasogastric_tube)))
+befor_dnr_Nasogastric_tube_arrange <- data_arrange_na(befor_dnr_Nasogastric_tube_sum)
+befor_dnr_Nasogastric_tube_arrange_percent <- percent_fn(befor_dnr_Nasogastric_tube_arrange,total_persons)
+
+# 尿管
+befor_dnr_Urinary_catheter_sum <- sort(summary(as.factor(need_data$befor_dnr_Urinary_catheter)))
+befor_dnr_Urinary_catheter_arrange <- data_arrange_na(befor_dnr_Urinary_catheter_sum)
+befor_dnr_Urinary_catheter_arrange_percent <- percent_fn(befor_dnr_Urinary_catheter_arrange,total_persons)
+
+# 氣切管 
+befor_dnr_Tracheostomy_tube_sum <- sort(summary(as.factor(need_data$befor_dnr_Tracheostomy_tube)))
+befor_dnr_Tracheostomy_tube_arrange <- data_arrange_na(befor_dnr_Tracheostomy_tube_sum)
+befor_dnr_Tracheostomy_tube_arrange_percent <- percent_fn(befor_dnr_Tracheostomy_tube_arrange,total_persons)
+
+# 胃造廔
+befor_dnr_Gastrostomy_sum <- sort(summary(as.factor(need_data$befor_dnr_Gastrostomy)))
+befor_dnr_Gastrostomy_arrange <- data_arrange_na(befor_dnr_Gastrostomy_sum)
+befor_dnr_Gastrostomy_arrange_percent <- percent_fn(befor_dnr_Gastrostomy_arrange,total_persons)
+
+#befor_dnr_Nasogastric_tube_arrange
+#befor_dnr_Urinary_catheter_arrange
+#befor_dnr_Tracheostomy_tube_arrange
+#befor_dnr_Gastrostomy_arrange
+
+cat("判末+簽署前一年內的導管留置記錄(鼻胃管):\n",
+    "\r 有",befor_dnr_Nasogastric_tube_arrange[which(names(befor_dnr_Nasogastric_tube_arrange)==1)],
+    "人有鼻胃管，百分比為",
+      befor_dnr_Nasogastric_tube_arrange_percent[which(names(befor_dnr_Nasogastric_tube_arrange_percent)==1)],
+    "。\n",
+    "\r 有",befor_dnr_Nasogastric_tube_arrange[which(names(befor_dnr_Nasogastric_tube_arrange)==0)],
+    "人沒有鼻胃管，百分比為",
+      befor_dnr_Nasogastric_tube_arrange_percent[which(names(befor_dnr_Nasogastric_tube_arrange_percent)==0)],
+    "。\n")
+
+cat("判末+簽署前一年內的導管留置記錄(尿管):\n",
+    "\r 有",befor_dnr_Urinary_catheter_arrange[which(names(befor_dnr_Urinary_catheter_arrange)==1)],
+    "人有尿管，百分比為",
+      befor_dnr_Urinary_catheter_arrange_percent[which(names(befor_dnr_Urinary_catheter_arrange_percent)==1)],
+    "。\n",
+    "\r 有",befor_dnr_Urinary_catheter_arrange[which(names(befor_dnr_Urinary_catheter_arrange)==0)],
+    "人沒有尿管，百分比為",
+      befor_dnr_Urinary_catheter_arrange_percent[which(names(befor_dnr_Urinary_catheter_arrange_percent)==0)],
+    "。\n")
+
+cat("判末+簽署前一年內的導管留置記錄(氣切管):\n",
+    "\r 有",befor_dnr_Tracheostomy_tube_arrange[which(names(befor_dnr_Tracheostomy_tube_arrange)==1)],
+    "人有氣切管，百分比為",
+      befor_dnr_Tracheostomy_tube_arrange_percent[which(names(befor_dnr_Tracheostomy_tube_arrange_percent)==1)],
+    "。\n",
+    "\r 有",befor_dnr_Tracheostomy_tube_arrange[which(names(befor_dnr_Tracheostomy_tube_arrange)==0)],
+    "人沒有氣切管，百分比為",
+      befor_dnr_Tracheostomy_tube_arrange_percent[which(names(befor_dnr_Tracheostomy_tube_arrange_percent)==0)],
+    "。\n")
+
+cat("判末+簽署前一年內的導管留置記錄(胃造廔):\n",
+    "\r 有",befor_dnr_Gastrostomy_arrange[which(names(befor_dnr_Gastrostomy_arrange)==1)],
+    "人有胃造廔，百分比為",
+      befor_dnr_Gastrostomy_arrange_percent[which(names(befor_dnr_Gastrostomy_arrange_percent)==1)],
+    "。\n",
+    "\r 有",befor_dnr_Gastrostomy_arrange[which(names(befor_dnr_Gastrostomy_arrange)==0)],
+    "人沒有胃造廔，百分比為",
+      befor_dnr_Gastrostomy_arrange_percent[which(names(befor_dnr_Gastrostomy_arrange_percent)==0)],
+    "。\n")
+
+cat("共有",total_persons,"人，NA有",befor_dnr_Nasogastric_tube_arrange[length(befor_dnr_Nasogastric_tube_arrange)],"人，能使用的資料有",sum(befor_dnr_Nasogastric_tube_arrange[-length(befor_dnr_Nasogastric_tube_arrange)]),"人。\n")
+
+
+#subset(need_data, is.na(befor_dnr_Nasogastric_tube), select = befor_dnr_CT:befor_dnr_Gastrostomy)
+
+# 多個導管
+#cat("有",sum(rowSums(subset(need_data,
+#                           select = c(befor_dnr_Nasogastric_tube,befor_dnr_Urinary_catheter,
+#                                      befor_dnr_Tracheostomy_tube,befor_dnr_Gastrostomy)))>1),
+#    "人在判末+簽署前一年內有多個導管。")
+#
+#subset(need_data,
+#       select = c(PERSONID2,befor_dnr_Nasogastric_tube,befor_dnr_Urinary_catheter,
+#                  befor_dnr_Tracheostomy_tube,befor_dnr_Gastrostomy)
+#       )[which(rowSums(subset(need_data,
+#                              select = c(befor_dnr_Nasogastric_tube,befor_dnr_Urinary_catheter,
+#                                         befor_dnr_Tracheostomy_tube,befor_dnr_Gastrostomy)))>1),]
+```
+
+# 主診斷
+```{R DIAGNOSIS, echo=FALSE, warning=F}
+# 主診斷
+DIAGNOSISTYPE_sum <- sort(summary(as.factor(need_data$DIAGNOSISTYPE)))
+DIAGNOSISTYPE_arrange <- data_arrange_na(DIAGNOSISTYPE_sum)
+DIAGNOSISTYPE_arrange_percent <- percent_fn(DIAGNOSISTYPE_arrange,total_persons)
+
+DIAGNOSISTYPE_arrange
+
+cat("主診斷:")
+for (i in 1:(length(DIAGNOSISTYPE_arrange)-1)) {
+  cat("\r",names(DIAGNOSISTYPE_arrange[i]),"有",DIAGNOSISTYPE_arrange[i],"人，百分比為",
+      DIAGNOSISTYPE_arrange_percent[i],"。\n")
+}
+
+cat("共有",total_persons,"人，NA(other)有",DIAGNOSISTYPE_arrange[length(DIAGNOSISTYPE_arrange)],"人，能使用的資料有",sum(DIAGNOSISTYPE_arrange[-length(DIAGNOSISTYPE_arrange)]),"人。\n")
+```
+
+# 主診斷分組
+```{R DIAGNOSIS_group, echo=FALSE, warning=F}
+# 主診斷
+DIAGNOSISTYPE_group_sum <- sort(summary(as.factor(need_data$DIAGNOSISTYPE_group)))
+DIAGNOSISTYPE_group_arrange <- data_arrange_na(DIAGNOSISTYPE_group_sum)
+DIAGNOSISTYPE_group_arrange_percent <- percent_fn(DIAGNOSISTYPE_group_arrange,total_persons)
+
+DIAGNOSISTYPE_group_arrange
+
+cat("主診斷:")
+for (i in 1:(length(DIAGNOSISTYPE_group_arrange)-1)) {
+  cat("\r",names(DIAGNOSISTYPE_group_arrange[i]),"有",DIAGNOSISTYPE_group_arrange[i],"人，百分比為",
+      DIAGNOSISTYPE_group_arrange_percent[i],"。\n")
+}
+
+cat("共有",total_persons,"人，NA(other)有",DIAGNOSISTYPE_group_arrange[length(DIAGNOSISTYPE_group_arrange)],"人，能使用的資料有",sum(DIAGNOSISTYPE_group_arrange[-length(DIAGNOSISTYPE_group_arrange)]),"人。\n")
+```
+
+# 重大治療
+Hemodialysis:在判末+簽署前一年內進行過洗腎(1=是;0=否)   
+Life Support:在判末+簽署前一年內進行過維生醫療(1=是;0=否)  
+CPR:在判末+簽署前一年內進行過CPR(1=是;0=否)  
+```{R major treatment, echo=FALSE, warning=F}
+# 洗腎
+Hemodialysis_sum <- sort(summary(as.factor(need_data$befor_dnr_Hemodialysis)))
+Hemodialysis_arrange <- data_arrange_na(Hemodialysis_sum)
+Hemodialysis_arrange_percent <- percent_fn(Hemodialysis_arrange,total_persons)
+
+#Hemodialysis_arrange
+
+# 維生醫療
+Life_Support_sum <- sort(summary(as.factor(need_data$`befor_dnr_Life Support`)))
+Life_Support_arrange <- data_arrange_na(Life_Support_sum)
+Life_Support_arrange_percent <- percent_fn(Life_Support_arrange,total_persons)
+
+#Life_Support_arrange
+
+# CPR
+CPR_sum <- sort(summary(as.factor(need_data$`befor_dnr_CPR`)))
+CPR_arrange <- data_arrange_na(CPR_sum)
+CPR_arrange_percent <- percent_fn(CPR_arrange,total_persons)
+
+#CPR_arrange
+
+
+major_trt_chiname <- c("洗腎", "維生醫療", "CPR")
+major_trt_arrange <- c("Hemodialysis_arrange", "Life_Support_arrange", "CPR_arrange")
+
+for (i in 1:length(major_trt_chiname)) {
+  with_perc <- function(x) {
+    perc <- eval(sym(gsub("(*)$", "\\1_percent", x)))[which(names(eval(sym(x))) == 1)]
+    paste0("，百分比為", perc)
+  }
+  
+  with_perc_zero <- function(x) {
+    perc <- eval(sym(gsub("(*)$", "\\1_percent", x)))[which(names(eval(sym(x))) == 0)]
+    paste0("，百分比為", perc)
+  }
+  
+  cat(sprintf("判末+簽署前一年內的 %s 紀錄:\n", major_trt_chiname[i]))
+  cat(sprintf(" 有 %d 人有 %s%s。\n",
+              eval(sym(major_trt_arrange[i]))[which(names(eval(sym(major_trt_arrange[1]))) == 1)],
+              major_trt_chiname[i], with_perc(major_trt_arrange[i])))
+  cat(sprintf(" 有 %d 人沒有 %s%s。\n",
+              eval(sym(major_trt_arrange[i]))[which(names(eval(sym(major_trt_arrange[1]))) == 0)],
+              major_trt_chiname[i], with_perc_zero(major_trt_arrange[i])))
+}
+
+
+cat("共有",total_persons,"人，NA有",CPR_arrange[length(CPR_arrange)],"人，能使用的資料有",sum(CPR_arrange[-length(CPR_arrange)]),"人。\n")
+```
+
+# 急住門次數
+E-急診;I-住院;O-門診
+```{R OIE_group, echo=FALSE, warning=F}
+# need_time前一年內每個病患的急診次數
+E_group_before_need_time_sum <- summary(need_data$E_group_before_need_time)
+E_group_before_need_time_arrange <-  E_group_before_need_time_sum
+E_group_before_need_time_arrange["NA's"] <- 0
+E_group_before_need_time_arrange_percent <- percent_fn(E_group_before_need_time_arrange,total_persons)
+
+# need_time前一年內每個病患的住院次數
+I_group_before_need_time_sum <- summary(need_data$I_group_before_need_time)
+I_group_before_need_time_arrange <-  I_group_before_need_time_sum
+I_group_before_need_time_arrange["NA's"] <- 0
+I_group_before_need_time_arrange_percent <- percent_fn(I_group_before_need_time_arrange,total_persons)
+
+# need_time前一年內每個病患的門診次數
+O_group_before_need_time_sum <- summary(need_data$O_group_before_need_time)
+O_group_before_need_time_arrange <-  O_group_before_need_time_sum
+O_group_before_need_time_arrange["NA's"] <- 0
+O_group_before_need_time_arrange_percent <- percent_fn(O_group_before_need_time_arrange,total_persons)
+
+
+
+cat("need_time前一年內每個病患的門住急次數:\n",
+    "急診:",names(E_group_before_need_time_arrange[1]),"有",E_group_before_need_time_arrange[1],"人，",
+              names(E_group_before_need_time_arrange[2]),"有",E_group_before_need_time_arrange[2],"人，",
+              names(E_group_before_need_time_arrange[3]),"有",E_group_before_need_time_arrange[3],"人，",
+              names(E_group_before_need_time_arrange[4]),"有",E_group_before_need_time_arrange[4],"人。\n",
+    "住院:",names(I_group_before_need_time_arrange[1]),"有",I_group_before_need_time_arrange[1],"人，",
+              names(I_group_before_need_time_arrange[2]),"有",I_group_before_need_time_arrange[2],"人，",
+              names(I_group_before_need_time_arrange[3]),"有",I_group_before_need_time_arrange[3],"人，",
+              names(I_group_before_need_time_arrange[4]),"有",I_group_before_need_time_arrange[4],"人，",
+              names(I_group_before_need_time_arrange[5]),"有",I_group_before_need_time_arrange[5],"人。\n",
+    "門診:",names(O_group_before_need_time_arrange[1]),"有",O_group_before_need_time_arrange[1],"人，",
+              names(O_group_before_need_time_arrange[2]),"有",O_group_before_need_time_arrange[2],"人，",
+              names(O_group_before_need_time_arrange[3]),"有",O_group_before_need_time_arrange[3],"人，",
+              names(O_group_before_need_time_arrange[4]),"有",O_group_before_need_time_arrange[4],"人，",
+              names(O_group_before_need_time_arrange[5]),"有",O_group_before_need_time_arrange[5],"人。\n"    )
+```
+
+```{R OIE, echo=FALSE, warning=F}
+## 門住急次數
+## 門診
+#O_summary <- round(summary(need_data$O_before_need_time),1) # quantile + mean
+#O_arrange <- data_arrange_na(O_summary)
+#O_sd <- round(sd(need_data$O_before_need_time),1) # 標準差
+#
+## 住院
+#I_summary <- round(summary(need_data$I_before_need_time),1) # quantile + mean
+#I_arrange <- data_arrange_na(I_summary)
+#I_sd <- round(sd(need_data$I_before_need_time),1) # 標準差
+#
+## 急診
+#E_summary <- round(summary(need_data$E_before_need_time),1) # quantile + mean
+#E_arrange <- data_arrange_na(E_summary)
+#E_sd <- round(sd(need_data$E_before_need_time),1) # 標準差
+#
+#OIE_chiname <- c("門診", "住院", "急診")
+#OIE_summary <- c("O_summary", "I_summary", "E_summary")
+#cat("判末+簽署前一年內門住急次數:\n")
+#for (i in 1:length(OIE_chiname)) {
+#  cat(sprintf(" %s 次數的四分位數:\n", OIE_chiname[i]))
+#  print(eval(sym(OIE_summary[i]))[-4])
+#  cat(sprintf(" %s 次數的平均數(標準差):",
+#              OIE_chiname[i]),
+#              eval(sym(OIE_summary[i]))[3],
+#              "(",eval(sym(gsub("_summary","\\1_sd",OIE_summary[i]))),")","\n",sep = "")
+#}
+#
+#cat("共有",total_persons,"人，NA有",E_arrange[length(E_arrange)],"人，能使用的資料有",total_persons,"人。\n")
+```
+
+# 製表
+```{R Table1, echo=FALSE, warning=F}
+# 製表
+data <- data.frame(
+  Variable = c("AGE", 
+                      "Under 75", "75-84", "Over 85",
+               "SEX", 
+                      "Male", "Female",
+               "EDUCATIONAL ATTAINMENT",
+                      Educational_NameEnglis,
+               "MARITALSTATUS", 
+                      "M-Married", "B-Single", "W-Widowed", "D-Divorced", "G-Cohabitating", 
+                      "A-Separated", "NA's",
+               "RELIGIOUS",
+                      Religious_NameEnglis,
+               "JOBKIND",
+                      "14-Unemployed", "08-Business", "SO-Student&Others", "13-Household", "AB-Labor",
+                      "PE-Public Employees", "12-freelance", "15-Service", "NA's",
+               "region_group",
+                      names(region_group_arrange),
+               "BARTHEL_group",
+                      "Completely dependent","Heavily dependent","Moderate dependence",
+                      "Mildly dependent or Completely independent", "NA's",
+               "GCS:",
+                      names(GCS_near_dnr_arrange),
+               "Catheter retention record before need_time:(1 = Yes; 0 = No)",
+                      "Nasogastric_tube",names(befor_dnr_Nasogastric_tube_arrange),
+                      "Urinary_catheter",names(befor_dnr_Urinary_catheter_arrange),
+                      "Tracheostomy_tube",names(befor_dnr_Tracheostomy_tube_arrange),
+                      "Gastrostomy",names(befor_dnr_Gastrostomy_arrange),
+               "Main Diagnosis", names(DIAGNOSISTYPE_arrange),
+               "Main Diagnosis Group", names(DIAGNOSISTYPE_group_arrange),
+               "Major Treatment before need_time:(1 = Yes; 0 = No)",
+                      "Hemodialysis",names(Hemodialysis_arrange),
+                      "Life Support",names(Life_Support_arrange),
+                      "CPR",names(CPR_arrange),
+               "Number of outpatient visits, hospitalizations, and emergencies:",
+                      "Emergency treatment","0-1 times","2-3 times","More than 4","NA's",
+                      "Hospitalization","0 times","1 times","2 times","More than 3","NA's",
+                      "Outpatient","Less than 6","7-12 times","13-24 times","More than 25","NA's"
+               ),
+  
+
+  `No.of persons(%)` = c(NA, paste(dnr_age_group_sum,"(",dnr_age_group_percent,"%)"),
+                         NA, paste(sort(ADMINISTRATIVESEXCODE_sum),"(",ADMINISTRATIVESEXCODE_percent,"%)"), 
+                         NA, paste(Educational_arrange,"(",Educational_arrange_percent,"%)"), 
+                         NA, paste(MARITAL_arrange,"(",MARITAL_arrange_percent,"%)"),
+                         NA, paste(Religious_arrange,"(",Religious_arrange_percent,"%)"),
+                         NA, paste(JOBnew_arrange,"(",JOBnew_arrange_percent,"%)"),
+                         NA, paste(region_group_arrange,"(",region_group_arrange_percent,"%)"),
+                         NA, paste(Barthel_group_arrange,"(",Barthel_group_arrange_percent,"%)"),
+                         NA, paste(GCS_near_dnr_arrange,"(",GCS_near_dnr_arrange_percent,"%)"),
+                         NA,
+                         NA, paste(befor_dnr_Nasogastric_tube_arrange,
+                                   "(",befor_dnr_Nasogastric_tube_arrange_percent,"%)"),
+                         NA, paste(befor_dnr_Urinary_catheter_arrange,
+                                   "(",befor_dnr_Urinary_catheter_arrange_percent,"%)"),
+                         NA, paste(befor_dnr_Tracheostomy_tube_arrange,
+                                   "(",befor_dnr_Tracheostomy_tube_arrange_percent,"%)"),
+                         NA, paste(befor_dnr_Gastrostomy_arrange,
+                                   "(",befor_dnr_Gastrostomy_arrange_percent,"%)"),
+                         NA, paste(DIAGNOSISTYPE_arrange,"(",DIAGNOSISTYPE_arrange_percent,"%)"),
+                         NA, paste(DIAGNOSISTYPE_group_arrange,"(",DIAGNOSISTYPE_group_arrange_percent,"%)"),
+                         NA,
+                         NA, paste(Hemodialysis_arrange,
+                                   "(",Hemodialysis_arrange_percent,"%)"),
+                         NA, paste(Life_Support_arrange,
+                                   "(",Life_Support_arrange_percent,"%)"),
+                         NA, paste(CPR_arrange,
+                                   "(",CPR_arrange_percent,"%)"),
+                         NA,
+                         NA, paste(E_group_before_need_time_arrange,
+                                   "(",E_group_before_need_time_arrange_percent,"%)"),
+                         NA, paste(I_group_before_need_time_arrange,
+                                   "(",I_group_before_need_time_arrange_percent,"%)"),
+                         NA, paste(O_group_before_need_time_arrange,
+                                   "(",O_group_before_need_time_arrange_percent,"%)")                        )
+            )   
+                        
+#  `No.of persons` = c(NA, dnr_age_group_sum,
+#                      NA, sort(ADMINISTRATIVESEXCODE_sum), 
+#                      NA, Educational_arrange, 
+#                      NA, MARITAL_arrange,
+#                      NA, Religious_arrange,
+#                      NA, JOBnew_arrange,
+#                      NA, region_arrange),
+#  `Percentage(%)` = c(NA, dnr_age_group_percent,
+#                      NA, ADMINISTRATIVESEXCODE_percent,
+#                      NA, Educational_arrange_percent,
+#                      NA, MARITAL_arrange_percent,
+#                      NA, Religious_arrange_percent,
+#                      NA, JOBnew_arrange_percent,
+#                      NA, region_arrange_percent)
+
+
+#colnames(data) <- c("Variable", "No. of persons", "Percentage(%)")
+colnames(data) <- c("Variable", "No. of persons(%)")
+
+# 將 NA 值填充為空字串
+data[is.na(data)] <- ""
+
+# 製作表格
+table <- kable(data, align = "l",
+               caption = paste("病人的基本資料(N=",total_persons,")", sep = ""),escape = T) %>%
+  kable_styling(full_width = FALSE) %>%
+  row_spec(which(data$`No. of persons`==""), bold = TRUE)  %>%  # 加粗第一行
+  row_spec(which(data$`No. of persons`!=""), extra_css = "padding-left: 20px;") %>%  # 增加左邊距
+  row_spec(which(data$Variable %in% c("Nasogastric_tube","Urinary_catheter",
+                                      "Tracheostomy_tube","Gastrostomy",
+                                      "Hemodialysis","Life Support","CPR",
+                                      "Outpatient","Hospitalization","Emergency treatment")),
+           extra_css = "padding-left: 15px;") %>%  # 增加左邊距
+  scroll_box(height = "700px")
+
+# 创建表格并应用样式
+#kable(data, align = "l", caption = "基本資料(N=28801)")
+
+table
+
+```
