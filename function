@@ -1,4 +1,3 @@
-# function
 # Cross-tabulation + chi_squre + logistic regression + odds ratio + confidence interval
 # 列聯表+卡方+羅吉斯迴歸+勝算比+信賴區間
 basic_biometrics_fn <- function(x,y){
@@ -21,3 +20,78 @@ basic_biometrics_fn <- function(x,y){
                     logistic = summary(logistic_model), odds_ratios = odds_ratios, Confidence_Interval = CI)
   return(need_list)
 } 
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+### Table function
+
+# 將logistic model轉為表格需要格式
+generate_table_data <- function(model) {
+  # 提取模型摘要
+  model_summary <- summary(model)
+  
+  # 提取係數和標準誤差
+  coefficients <- coef(model)
+  std_errors <- model_summary$coefficients[, "Std. Error"]
+  
+  # 計算OR和95%信賴區間
+  OR <- exp(coefficients)
+  lower_95_CI <- exp(coefficients - 1.96 * std_errors)
+  upper_95_CI <- exp(coefficients + 1.96 * std_errors)
+  
+  # 提取P值
+  p_values <- model_summary$coefficients[, "Pr(>|z|)"]
+  
+  # 創建結果表並格式化P值
+  table_data <- data.frame(
+    Coefficient = round(coefficients, 2),
+    OR = round(OR, 2),
+    Lower_95_CI = round(lower_95_CI, 2),
+    Upper_95_CI = round(upper_95_CI, 2),
+    P_value = ifelse(p_values < 0.001, "<0.001", round(p_values, 2))
+  )
+  return(table_data)
+}
+
+# 生成變量名稱的函數
+create_variable_names <- function(show_names, prefix, group_names) {
+  c(show_names, gsub(prefix, "", group_names[grep(prefix, group_names)]))
+}
+
+
+# 生成 OR (95% CI) 的函數
+create_or_ci <- function(prefix, data) {
+  indices <- grep(prefix, rownames(data))
+  or_ci <- paste(data$OR[indices],"([", data$Lower_95_CI[indices], ",",
+                 data$Upper_95_CI[indices], "])", sep = "")
+  if (length(indices) > 1) {
+    return(c(NA, or_ci))
+  } else {
+    return(or_ci)
+  }
+}
+
+
+# 生成 P value 的函數
+create_p_values <- function(prefix, data) {
+  indices <- grep(prefix, rownames(data))
+  if (length(indices) > 1) {
+    return(c(NA, data$P_value[indices]))
+  } else {
+    return(data$P_value[indices])
+  }
+}
+
+
+# 將單個OR與P value 連接起來
+all_OR_P <- function(vars, data) {
+  OR <- c()
+  P <- c()
+  
+  for (var in vars) {
+    OR <- c(OR, create_or_ci(var, data))
+    P <- c(P, create_p_values(var, data))
+  }
+  return(list(OR = OR, P = P))
+}
+
+
