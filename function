@@ -1,0 +1,23 @@
+# function
+# Cross-tabulation + chi_squre + logistic regression + odds ratio + confidence interval
+# 列聯表+卡方+羅吉斯迴歸+勝算比+信賴區間
+basic_biometrics_fn <- function(x,y){
+  # Creating Cross-tabulation
+  # 建立列聯表
+  table <- table(x, y)
+  # Perform a chi-square test
+  # 執行卡方檢驗
+  chisq <- chisq.test(table)  
+  # Perform logistic regression
+  # 執行羅吉斯迴歸
+  logistic_model <- glm(y ~ x, family=binomial)
+  # Calculate odds ratio
+  # 計算勝算比
+  odds_ratios <- exp(coef(logistic_model))
+  # Calculate confidence interval
+  # 計算信賴區間
+  CI <- exp(confint(logistic_model))
+  need_list <- list(table = table, chisq_test = chisq,
+                    logistic = summary(logistic_model), odds_ratios = odds_ratios, Confidence_Interval = CI)
+  return(need_list)
+} 
