@@ -95,3 +95,49 @@ all_OR_P <- function(vars, data) {
 }
 
 
+EX.
+other_glm <- glm(`不施行之其他維生醫療(其他)` ~ region_group + Barthel_group + GCS_group_near_dnr + DIAGNOSISTYPE_group_cancer + befor_dnr_Hemodialysis + I_group_before_need_time + O_group_before_need_time, data = need_data, family=binomial)
+other_null <- glm(`不施行之其他維生醫療(其他)` ~ 1, data = need_data_clean, family = binomial)
+other_stepwise <- step(other_null, scope = list(lower = other_null, upper = other_glm), direction = "both")
+
+# other_stepwise
+data_other <- generate_table_data(other_stepwise)
+
+need_grep_other <- c("region_group","befor_dnr_Hemodialysis","DIAGNOSISTYPE_group_cancer",
+                     "O_group_before_need_time")
+
+# 創建結果表
+data_other_stepwise <- data.frame(
+  Variable = c(# Region 
+               create_variable_names("Region", "region_group", rownames(data_DNR_sign)),
+               # Hemodialysis
+               "Hemodialysis(YES)", 
+               # cancer
+               "cancer(NO)",
+               # Outpatient
+               "Outpatient",
+                  "7-12 times", "13-24 times", "More than 25 times"), 
+  `OR (95% CI)` =  all_OR_P(need_grep_other,data_other)$OR,
+  `P value` = all_OR_P(need_grep_other,data_other)$P
+)
+
+# 將 NA 值填充為空字串
+data_other_stepwise[is.na(data_other_stepwise)] <- ""
+
+# 設定列名
+colnames(data_other_stepwise) <- c("Variable", "OR (95% CI)", "P value")
+
+# 製作表格
+table_other <- kable(data_other_stepwise, align = "l",
+               caption = "其他 logistic regression",escape = T) %>%
+  kable_styling(full_width = FALSE) %>%
+
+  row_spec(setdiff(which(data_other_stepwise$`OR (95% CI)`!=""),
+           grep("\\(", data_other_stepwise$Variable )), extra_css = "padding-left: 20px;") %>%  # 增加左邊距
+
+  scroll_box(height = "700px")
+
+# 创建表格并应用样式
+#kable(data, align = "l", caption = "基本資料(N=28801)")
+
+table_other
